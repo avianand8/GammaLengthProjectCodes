@@ -7,6 +7,7 @@ function testPerformanceSynthData_all(thresholdFractionList,electrodeNum,numMean
 isMP =find(strcmp(algNames,"MP"))>0;
 isOMP =find(strcmp(algNames,"OMP"))>0;
 isOMPMAGE =find(strcmp(algNames,"OMP-MAGE"))>0;
+isOMPGEAR =find(strcmp(algNames,"OMP-GEAR"))>0;
 isHILBERT =find(strcmp(algNames,"HILBERT"))>0;
 isCGT =find(strcmp(algNames,"CGT"))>0;
 isFGLD =find(strcmp(algNames,"FGLD"))>0;
@@ -19,7 +20,7 @@ gridType = 'Microelectrode'; folderSourceString = ''; cVal=100;
 numThresholds = length(thresholdFractionList);
 
 % BurstDataParameters
-burstLenList = [0.05 0.1:0.1:1];
+burstLenList = [ 0.05];
 cvAmp=0.1;
 stimulusPeriodS=[0.5 2];
 baselinePeriodS=[-1.5 0];
@@ -78,9 +79,13 @@ if isOMP
     medianBurstLengthOMP = zeros(numBurstLengths,numThresholds);
     seBurstLengthOMP = zeros(numBurstLengths,numThresholds);
 end
-if isOMP
+if isOMPMAGE
     medianBurstLengthOMPMAGE = zeros(numBurstLengths,numThresholds);
     seBurstLengthOMPMAGE = zeros(numBurstLengths,numThresholds);
+end
+if isOMPGEAR
+    medianBurstLengthOMPGEAR = zeros(numBurstLengths,numThresholds);
+    seBurstLengthOMPGEAR = zeros(numBurstLengths,numThresholds);
 end
 
 for i=1:numBurstLengths
@@ -89,7 +94,9 @@ for i=1:numBurstLengths
     disp(['Burst Length: ' num2str(burstLen)]);
     
     [analogData,timeVals] = generateBurstData(subjectName,expDate,protocolName,gridType,folderSourceString,electrodeNum,cVal,burstLen,cvAmp,displayFlagBurst,synthColorName,stimulusPeriodS,gammaFreqRangeHz,numMeanBursts);
+   
     diffPower = getChangeInPower(analogData,timeVals,stimulusPeriodS,baselinePeriodS,gammaFreqRangeHz);
+    
     
     for ii=1:length(thresholdFractionList)
         thresholdFactor = diffPower*thresholdFractionList(ii);
@@ -137,13 +144,21 @@ for i=1:numBurstLengths
             end
             [medianBurstLengthOMP(i,ii),seBurstLengthOMP(i,ii)] = getMedianAndSE(burstLengthOMP);
         end
-          if isOMPMAGE
+        if isOMPMAGE
             if ii==1
                 [burstLengthOMPMAGE,~,~,gaborInfo2,header2] = getBurstLength_all(analogData,timeVals,sqrt(thresholdFactor),displayFlagOMPMAGE,stimulusPeriodS,baselinePeriodS,gammaFreqRangeHz,maxIteration,adaptiveDictionaryParam,dictionarySize,[],[],"OMP-MAGE"); %#ok<*UNRCH>
             else
                 burstLengthOMPMAGE = getBurstLength_all(analogData,timeVals,sqrt(thresholdFactor),displayFlagOMPMAGE,stimulusPeriodS,baselinePeriodS,gammaFreqRangeHz,maxIteration,adaptiveDictionaryParam,dictionarySize,gaborInfo2,header2,"OMP-MAGE");
             end
             [medianBurstLengthOMPMAGE(i,ii),seBurstLengthOMPMAGE(i,ii)] = getMedianAndSE(burstLengthOMPMAGE);
+        end
+        if isOMPGEAR
+            if ii==1
+                [burstLengthOMPGEAR,~,~,gaborInfo22,header22] = getBurstLength_all(analogData,timeVals,sqrt(thresholdFactor),displayFlagOMPMAGE,stimulusPeriodS,baselinePeriodS,gammaFreqRangeHz,maxIteration,adaptiveDictionaryParam,dictionarySize,[],[],"OMP-GEAR"); %#ok<*UNRCH>
+            else
+                burstLengthOMPGEAR = getBurstLength_all(analogData,timeVals,sqrt(thresholdFactor),displayFlagOMPMAGE,stimulusPeriodS,baselinePeriodS,gammaFreqRangeHz,maxIteration,adaptiveDictionaryParam,dictionarySize,gaborInfo22,header22,"OMP-GEAR");
+            end
+            [medianBurstLengthOMPGEAR(i,ii),seBurstLengthOMPGEAR(i,ii)] = getMedianAndSE(burstLengthOMPGEAR);
         end
 end
 
@@ -178,6 +193,9 @@ lgnd=[];
     if isOMPMAGE
         lgnd=[lgnd "OMP-MAGE"];
     end
+    if isOMPGEAR
+        lgnd=[lgnd "OMP-GEAR"];
+    end
     lgnd=[lgnd "Injected Bursts"]
 for ii=1:numThresholds
     figure(ii);
@@ -199,13 +217,16 @@ for ii=1:numThresholds
         errorbar(burstLenList,medianBurstLengthHilbert(:,ii),seBurstLengthHilbert(:,ii),'color',colorNames(numCGTSDList+3,:),'LineWidth',2);
     end
     if isMP
-        errorbar(burstLenList,medianBurstLengthMP(:,ii),seBurstLengthMP(:,ii),'color',colorNames(numCGTSDList+4,:),'LineWidth',2);
+        errorbar(burstLenList,medianBurstLengthMP(:,ii),seBurstLengthMP(:,ii),'color',[0.8 0 0],'LineWidth',2);
     end
     if isOMP
-        errorbar(burstLenList,medianBurstLengthOMP(:,ii),seBurstLengthOMP(:,ii),'color',colorNames(numCGTSDList+5,:),'LineWidth',2);
+        errorbar(burstLenList,medianBurstLengthOMP(:,ii),seBurstLengthOMP(:,ii),'color',[0 0 0.8],'LineWidth',2);
     end
      if isOMPMAGE
-        errorbar(burstLenList,medianBurstLengthOMPMAGE(:,ii),seBurstLengthOMPMAGE(:,ii),'color',colorNames(numCGTSDList+6,:),'LineWidth',2);
+        errorbar(burstLenList,medianBurstLengthOMPMAGE(:,ii),seBurstLengthOMPMAGE(:,ii),'color',[0 0.8 0],'LineWidth',2);
+    end
+     if isOMPGEAR
+        errorbar(burstLenList,medianBurstLengthOMPGEAR(:,ii),seBurstLengthOMPGEAR(:,ii),'color',[0 0.4 0],'LineWidth',2);
     end
     grid on;
     box on;
