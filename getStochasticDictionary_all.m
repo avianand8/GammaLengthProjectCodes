@@ -4,7 +4,8 @@
 % option to select any of the three is algName 
 
 function [gaborInfo,header] = getStochasticDictionary_all(data,timeVals,maxIteration,adaptiveDictionaryParam,dictionarySize,algName)
-addpath ./Mage_try/
+addpath ./Mage/
+addpath ./Gear/
 if ~exist('maxIteration','var');           maxIteration=50;             end
 if ~exist('adaptiveDictionaryParam','var');adaptiveDictionaryParam=0.9; end
 if ~exist('dictionarySize','var');      dictionarySize=[];              end
@@ -14,6 +15,7 @@ numTrials = size(data,1);
 sigLen = size(data,2);
 
 %%%%%%%%%%%%%%%%%%%%%_________MP Parameters _________%%%%%%%%%%%%%%%%%%%
+%recAc=98;
 recAc=100; % Pecentage of Maximum reconstructed Energy (Value should be less than 100)
 
 %%%%%%%%%%%%%%%%%%_______ Run MP on single trials ________%%%%%%%%%%%%%%
@@ -41,10 +43,12 @@ for i=1:numTrials
         fclose(fp);
         
         % Run MP
-        system(['./mp31' ' <commands.txt'],'-echo');
+        system(['mp31.exe' ' <commands.txt'],'-echo');
         
         % Read Data
-        [gaborInfo(i,:,:), header(i,:)]=readbook('mpresults',0);
+        [g,h]=readbook('mpresults',0);
+        gaborInfo(i,1:size(g,1),:) = g;
+        header(i,1:size(h,2)) = h;
         
         % Delete tmp files
         %delete sig.txt;                         % Deletes the signal file
@@ -54,14 +58,20 @@ for i=1:numTrials
     if algName == "OMP"
         sig=data(i,:)'; 
         [a,h] = Omp_v1(sig,timeVals,i,dictionarySize,maxIteration);
-        gaborInfo(i,:,:)=a;
-        header(i,:) = h;
+        gaborInfo(i,1:size(a,1),:) = a;
+         header(i,1:size(h,2)) = h;
     end
     if algName == "OMP-MAGE"
         sig=data(i,:)'; 
         [a,h] = Omp_mage(sig,dictionarySize,Fs,maxIteration);
-        gaborInfo(i,:,:)=a;
-        header(i,:) = h;
+        gaborInfo(i,1:size(a,1),:) = a;
+         header(i,1:size(h,2)) = h;
+    end
+     if algName == "OMP-GEAR"
+        sig=data(i,:)'; 
+        [a,h] = Omp_gear(sig,dictionarySize,Fs,maxIteration);
+        gaborInfo(i,1:size(a,1),:) = a;
+         header(i,1:size(h,2)) = h;
     end
 end
 end
