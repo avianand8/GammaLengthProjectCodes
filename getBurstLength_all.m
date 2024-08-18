@@ -50,6 +50,7 @@ for i=1:numTrials
     
     mtmp = m(goodAtomsInTF);
     useThesePos = goodAtomsInTF(mtmp>threshold);
+    %useThesePos = goodAtomsInTF(mtmp~=0);%for no noise case
     if ~isempty(useThesePos)
         lengthList{i} = octaveToLengthMultiplier*o(useThesePos);
         freqList{i} = f(useThesePos);
